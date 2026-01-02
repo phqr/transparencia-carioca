@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gastos Municipais do Rio de Janeiro</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script><link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div>
+            <h1>Gastos Municipais do Rio de Janeiro</h1>
+            <p class="subtitle">Análise dos gastos públicos municipais</p>
+        </div>
+        <nav>
+            <a href="#" onclick="togglePage('general-page')">Geral</a>
+            <a href="#" onclick="togglePage('annual-page')">Anual</a>
+            <a href="#" onclick="togglePage('about-page')">Sobre</a>
+        </nav>
+    </header>
+    
+    <div class="container">
+        <div id="error"></div>
+        <div id="content">
+            <div class="page general active" id="general-page">
+                <h1 class="chart-title">Evolução dos Gastos Municipais (2014-2023)</h1>
+                <div class="stats-grid">
+                    <div class="stat-card bc blue">
+                        <div class="stat-label">Total Orçado (10 anos)</div>
+                        <div class="stat-value" id="evolution-orcamento-total"></div>
+                    </div>
+                    <div class="stat-card bc green">
+                        <div class="stat-label">Total Empenhado (10 anos)</div>
+                        <div class="stat-value" id="evolution-empenhado-total"></div>
+                    </div>
+                    <div class="stat-card bc orange">
+                        <div class="stat-label">Total Pago (10 anos)</div>
+                        <div class="stat-value" id="evolution-pago-total"></div>
+                    </div>
+                </div>
+                <div class="chart-evolution-container">
+                    <canvas id="evolutionChart"></canvas>
+                </div>
+            </div>
+
+            <div class="page annual" id="annual-page">
+                <div class="annual-menu-container">
+                    <h1 class="chart-title"></h1>
+                    <div class="year-selector">
+                        <h1><select id="year-select" onchange="changeYear(this.value)" disabled></select></h1>
+                    </div>
+                    <a href="#" onclick="toggleView('charts-container')">Gráficos</a>
+                    <a href="#" onclick="toggleView('table-container')">Tabela</a>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card bc blue">
+                        <div class="stat-card-header">
+                            <div class="stat-label">Orçamento Atualizado</div>
+                        </div>
+                        <div class="stat-value" id="orcamento-total"></div>
+                        <div class="stat-subvalue" id="total-empenhado"></div>
+                        <div class="popover">
+                            <div class="popover-title">Orçamento Atualizado</div>
+                            <div class="popover-content">
+                                Valor total do orçamento municipal, <span class="popover-highlight">já incluindo créditos adicionais e cancelamentos</span>. Este é o montante autorizado para ser gasto pela prefeitura durante o ano.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card bc green">
+                        <div class="stat-card-header">
+                            <div class="stat-label">Total Pago</div>
+                        </div>
+                        <div class="stat-value" id="pago-total"></div>
+                        <div class="stat-subvalue" id="percentual-pago"></div>
+                        <div class="popover">
+                            <div class="popover-title">Total Pago</div>
+                            <div class="popover-content">
+                                Valor efetivamente pago pela prefeitura, <span class="popover-highlight">referente apenas à execução orçamentária do ano</span>. Representa o percentual executado do orçamento autorizado.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card bc orange">
+                        <div class="stat-card-header">
+                            <div class="stat-label">Pago com Restos</div>
+                        </div>
+                        <div class="stat-value" id="pago-restos-total"></div>
+                        <div class="stat-subvalue"></div>
+                        <div class="popover">
+                            <div class="popover-title">Pago com Restos</div>
+                            <div class="popover-content">
+                                Total pago incluindo <span class="popover-highlight">restos a pagar de anos anteriores</span>. São despesas empenhadas em anos passados mas pagas no ano selecionado, somadas aos pagamentos do orçamento atual.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card bc red">
+                        <div class="stat-card-header">
+                            <div class="stat-label">Total de Órgãos</div>
+                        </div>
+                        <div class="stat-value" id="total-orgaos"></div>
+                        <div class="popover">
+                            <div class="popover-title">Total de Órgãos</div>
+                            <div class="popover-content">
+                                Número de <span class="popover-highlight">órgãos e entidades municipais</span> com execução orçamentária, incluindo secretarias, fundos, autarquias e empresas públicas.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="charts-container annual-view active" id="charts-container">
+                    <div class="chart-header">
+                        <h1 class="chart-title"></h1>
+                        <div class="chart-toggle">
+                            <button class="toggle-chart-btn active" onclick="toggleChart('bar')">
+                                Barras
+                            </button>
+                            <button class="toggle-chart-btn" onclick="toggleChart('pie')">
+                                Pizza
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <div id="barChartContent" class="chart-content active">
+                            <canvas id="topOrgaosChart"></canvas>
+                        </div>
+                        <div id="pieChartContent" class="chart-content">
+                            <canvas id="pieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container annual-view" id="table-container">
+                    <div class="table-controls">
+                        <div class="items-per-page">
+                            <label for="itemsPerPage">Itens por página:</label>
+                            <select id="itemsPerPage" onchange="changeItemsPerPage(this.value)">
+                                <option value="10" selected>10</option>
+                                <option value="20">20</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                    </div>
+                    <table id="orgaosTable">
+                        <thead>
+                            <tr>
+                                <th class="sortable" id="orgao" onclick="sortTable('orgao')">
+                                    Órgão
+                                </th>
+                                <th class="sortable" id="orcamento_atualizado" onclick="sortTable('orcamento_atualizado')">
+                                    Orçamento Atualizado
+                                </th>
+                                <th class="sortable" id="pago" onclick="sortTable('pago')">
+                                    Pago
+                                </th>
+                                <th class="sortable" id="percentual_execucao" onclick="sortTable('percentual_execucao')">
+                                    % Execução
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                    <div class="pagination" id="pagination">
+                        <div id="pagination-pages"></div>
+                        <div id="pagination-info"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="page about" id="about-page">
+                <div class="intro">
+                    <h2>Gastos Municipais do Rio de Janeiro</h2>
+                    <p>
+                        Este projeto visa promover a <strong>transparência</strong> e a <strong>inclusão digital</strong> através do acesso facilitado aos dados públicos da execução orçamentária do município do Rio de Janeiro.
+                    </p>
+                    <p>
+                        Desenvolvido como parte da <strong>Atividade Extensionista II: Tecnologia Aplicada à Inclusão Digital - Projeto</strong> da Escola Superior Politécnica (ESP) da UNINTER, o projeto busca aproximar o cidadão comum das informações sobre como os recursos públicos são aplicados.
+                    </p>
+                    
+                    <div class="highlight">
+                        <strong>Observação:</strong> Para informações oficiais, detalhadas e/ou atualizadas, sempre consulte o portal de transparência da Prefeitura do Rio de Janeiro.
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header">
+                        <h3>Origem dos Dados</h3>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-body">
+                            <div class="highlight">
+                                <strong>Fonte Oficial:</strong> 
+                                <a href="https://transparencia.prefeitura.rio/" target="_blank" class="link-card">
+                                    <div class="link-text">
+                                        <strong>Portal de Transparencia do Município do Rio de Janeiro</strong>
+                                        <span>O portal de transparência e acesso às informações públicas da Prefeitura do Rio de Janeiro</span>
+                                    </div>
+                                </a>
+                                <strong>Sistema:</strong>
+                                <a href="https://www.rio.rj.gov.br/web/contasrio/dados-abertos" target="_blank" class="link-card">
+                                    <div class="link-text">
+                                        <strong>Contas Rio - Dados Abertos</strong>
+                                        <span>Portal onde é possível encontrar arquivos para download, em formato aberto, referentes à execução orçamentária das receitas e despesas, às liquidações de despesas por favorecido, dentre várias outras informações. Desenvolvido pela Controladoria Geral do Rio de Janeiro</span>
+                                    </div>
+                                </a> 
+                                <strong>Período:</strong> 2014 a 2023 (10 anos fiscais)<br>
+                            </div>
+
+                            <h4>Sobre os Dados</h4>
+                            <p>
+                                Os dados apresentados neste projeto foram extraídos do portal oficial de dados abertos mais recentes disponíveis da Prefeitura do Rio de Janeiro. Todos os valores representam a execução orçamentária oficial consolidada por exercício fiscal.
+                            </p>
+
+                            <h4>Tipos de Informações Disponíveis</h4>
+                            <ul>
+                                <li>Orçamento inicial e atualizado por órgão</li>
+                                <li>Valores empenhados, liquidados e pagos</li>
+                                <li>Restos a pagar (despesas de anos anteriores)</li>
+                                <li>Percentuais de execução orçamentária</li>
+                                <li>Detalhamento por programas e ações</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header">
+                        <h3>Glossário de Termos Orçamentários</h3>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-body">
+                            <p>Entenda os principais conceitos relacionados à execução orçamentária:</p>
+
+                            <div class="glossary-term">
+                                <strong>Orçamento Atualizado</strong>
+                                <p>Valor total autorizado para gastos, já contemplando créditos adicionais (aumentos) e cancelamentos de créditos (reduções) ocorridos durante o ano fiscal.</p>
+                            </div>
+
+                            <div class="glossary-term">
+                                <strong>Empenhado</strong>
+                                <p>Compromisso assumido pelo órgão público. Representa a reserva de recursos para pagamento de uma despesa específica.</p>
+                            </div>
+
+                            <div class="glossary-term">
+                                <strong>Liquidado</strong>
+                                <p>Despesa verificada e reconhecida. Ocorre após a entrega do produto/serviço e confirmação de que tudo está conforme contratado.</p>
+                            </div>
+
+                            <div class="glossary-term">
+                                <strong>Pago</strong>
+                                <p>Valor efetivamente desembolsado pela prefeitura, referente à execução orçamentária do ano corrente.</p>
+                            </div>
+
+                            <div class="glossary-term">
+                                <strong>Restos a Pagar</strong>
+                                <p>Despesas que foram empenhadas em um ano mas não foram pagas até 31 de dezembro, sendo pagas em exercícios seguintes. O campo "Pago com Restos" soma os pagamentos do ano atual com esses valores.</p>
+                            </div>
+
+                            <div class="glossary-term">
+                                <strong>Percentual de Execução</strong>
+                                <p>Indica quanto do orçamento atualizado foi efetivamente pago. Calculado como: (Pago / Orçamento Atualizado) × 100</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header">
+                        <h3>Metodologia e Tecnologias</h3>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-body">
+                            <h4>Processo de Desenvolvimento</h4>
+                            <ol>
+                                <li><strong>Coleta de Dados:</strong> Download dos arquivos CSV do portal Contas Rio - Dados Abertos</li>
+                                <li><strong>Tratamento:</strong> Limpeza, consolidação e estruturação dos dados no <a href="https://colab.research.google.com/drive/1rh3U0zTT4ot_Bzhf0-s0E1-Y0qC8F5Nu?usp=sharing" target="_blank">Google Colab</a></li>
+                                <li><strong>Análise:</strong> Cálculo de rankings, percentuais e agregações por ano</li>
+                                <li><strong>Visualização:</strong> Desenvolvimento da interface web</li>
+                            </ol>
+
+                            <h4>Tecnologias Utilizadas</h4>
+                            <div class="tech">
+                                <div class="tech-item">
+                                    <strong>HTML5</strong>
+                                    <span>Estrutura</span>
+                                </div>
+                                <div class="tech-item">
+                                    <strong>CSS3</strong>
+                                    <span>Estilização</span>
+                                </div>
+                                <div class="tech-item">
+                                    <strong>JavaScript</strong>
+                                    <span>Interatividade</span>
+                                </div>
+                                <div class="tech-item">
+                                    <strong>Chart.js</strong>
+                                    <span>Gráficos</span>
+                                </div>
+                                <div class="tech-item">
+                                    <strong>JSON</strong>
+                                    <span>Dados</span>
+                                </div>
+                                <div class="tech-item">
+                                    <strong>Python</strong>
+                                    <span>Tratamento dos dados</span>
+                                </div>
+                            </div>
+
+                            <h4>Cálculos Realizados</h4>
+                            <ul>
+                                <li>Consolidação de dados por órgão e por ano</li>
+                                <li>Ranking de órgãos por orçamento atualizado</li>
+                                <li>Percentuais de execução orçamentária</li>
+                                <li>Análise de restos a pagar</li>
+                                <li>Agregações e totalizações por período</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <h3>Desenvolvido por</h3>
+                    </div>
+                    <div class="section-content">
+                        <div class="section-body">
+                            <p>
+                                <strong>Nome:</strong> Pedro Henrique Queiroz Rodrigues<br>
+                                <strong>RU:</strong> 4913907<br>
+                                <strong>Curso:</strong> CST Análise e Desenvolvimento de Sistemas<br>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <script src="index.js"></script>
+</body>
+</html>
